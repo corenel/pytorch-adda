@@ -1,6 +1,7 @@
 """Main script for ADDA."""
 
 import params
+from core import train_src
 from models import Classifier, Discriminator
 from utils import get_data_loader, init_model, init_random_seed
 
@@ -27,3 +28,5 @@ if __name__ == '__main__':
                                  hidden_dims=params.d_hidden_dims,
                                  output_dims=params.d_output_dims),
                    restore=params.d_model_restore)
+
+    train_src(C_src, src_data_loader)

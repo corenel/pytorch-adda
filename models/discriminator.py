@@ -1,6 +1,5 @@
 """Discriminator model for ADDA."""
 
-import torch.nn.functional as F
 from torch import nn
 
 

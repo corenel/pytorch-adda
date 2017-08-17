@@ -31,8 +31,7 @@ d_model_restore = None
 # params for training network
 num_gpu = 1
 num_epochs = 200000
-log_step = 1
-sample_step = 100
+log_step = 100
 save_step = 100
 manual_seed = None
 
@@ -41,8 +40,3 @@ d_learning_rate = 1e-4
 c_learning_rate = 1e-4
 beta1 = 0.5
 beta2 = 0.9
-use_Adam = True
-use_BN = False
-
-# params for WGAN-GP
-penalty_lambda = 10
