@@ -13,7 +13,7 @@ pre_process = transforms.Compose([transforms.ToTensor(),
                                       std=params.dataset_std)])
 
 # dataset and data loader
-mnist_dataset = datasets.mnist(root=params.data_root,
+mnist_dataset = datasets.MNIST(root=params.data_root,
                                transform=pre_process,
                                download=True)
 
@@ -23,7 +23,5 @@ mnist_data_loader = torch.utils.data.DataLoader(dataset=mnist_dataset,
 
 
 def get_mnist():
-    """Inf data iterator."""
-    while True:
-        for images, _ in mnist_data_loader:
-            yield images
+    """Get MNIST dataset loader."""
+    return mnist_data_loader
