@@ -7,6 +7,7 @@ import torch
 import torch.backends.cudnn as cudnn
 from torch.autograd import Variable
 
+import params
 from datasets import get_mnist, get_usps
 
 
@@ -79,6 +80,9 @@ def init_model(net, restore):
     return net
 
 
-def get_models():
-    """Get models for ADDA."""
-    pass
+def save_model(net, filename):
+    """Save trained model."""
+    if not os.path.exists(params.model_root):
+        os.makedirs(params.model_root)
+    torch.save(net.state_dict(),
+               os.path.join(params.model_root, filename))

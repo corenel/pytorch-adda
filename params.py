@@ -19,7 +19,7 @@ tgt_dataset = "USPS"
 tgt_model_restore = None
 
 # params for setting up models
-model_root = "model"
+model_root = "snapshots"
 num_channels = 1
 c_conv_dims = 10
 c_fc_dims = 50
@@ -30,7 +30,8 @@ d_model_restore = None
 
 # params for training network
 num_gpu = 1
-num_epochs = 200000
+num_epochs_pre = 100
+num_epochs = 100
 log_step = 100
 save_step = 100
 manual_seed = None
