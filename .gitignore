@@ -1,6 +1,6 @@
 # pytorch dataset
 data
-model
+snapshots
 
 # trash
 .DS_Store

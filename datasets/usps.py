@@ -36,7 +36,6 @@ class USPS(data.Dataset):
     def __init__(self, root, train=True, transform=None, download=False):
         """Init USPS dataset."""
         # init params
-        print(os.getcwd())
         self.root = os.path.expanduser(root)
         self.filename = "usps_28x28.pkl"
         self.train = train
@@ -92,7 +91,7 @@ class USPS(data.Dataset):
             os.makedirs(dirname)
         if os.path.isfile(filename):
             return
-        print("Download %s to %s" % (self.url, filename))
+        print("Download %s to %s" % (self.url, os.path.abspath(filename)))
         urllib.request.urlretrieve(self.url, filename)
         print("[DONE]")
         return
