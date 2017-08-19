@@ -13,10 +13,12 @@ num_classes = 10
 # params for source dataset
 src_dataset = "MNIST"
 src_model_restore = "snapshots/classifier_src-100.pt"
+src_model_trained = True
 
 # params for target dataset
 tgt_dataset = "USPS"
 tgt_model_restore = None
+tgt_model_trained = False
 
 # params for setting up models
 model_root = "snapshots"
