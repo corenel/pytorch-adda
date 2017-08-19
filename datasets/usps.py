@@ -72,7 +72,8 @@ class USPS(data.Dataset):
         img, label = self.train_data[index, ::], self.train_labels[index]
         if self.transform is not None:
             img = self.transform(img)
-        label = torch.LongTensor([np.int64(label)])
+        label = torch.LongTensor([np.int64(label).item()])
+        # label = torch.FloatTensor([label.item()])
         return img, label
 
     def __len__(self):

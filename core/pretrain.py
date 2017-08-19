@@ -15,13 +15,13 @@ def train_src(model, data_loader):
     print("=== Training classifier for source domain ===")
     print(model)
 
+    model.train()
     optimizer = optim.Adam(model.parameters(),
                            lr=params.c_learning_rate,
                            betas=(params.beta1, params.beta2))
     criterion = nn.NLLLoss()
 
     for epoch in range(params.num_epochs_pre):
-        model.train()
         for step, (images, labels) in enumerate(data_loader):
             images = make_variable(images)
             labels = make_variable(labels.squeeze_())

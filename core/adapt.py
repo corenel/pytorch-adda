@@ -1,6 +1,101 @@
 """Adversarial adaptation to train target encoder."""
 
+import os
 
-def train_tgt(model_src, model_tgt, data_loader):
+import torch
+import torch.optim as optim
+from torch import nn
+
+import params
+from utils import make_variable
+
+
+def train_tgt(model_src, model_tgt, model_critic,
+              src_data_loader, tgt_data_loader):
     """Train encoder for target domain."""
-    pass
+    print("=== Training encoder for target domain ===")
+    model_tgt.train()
+    model_critic.train()
+
+    print(model_tgt)
+    print(model_critic)
+
+    # no need to compute gradients for source model
+    for p in model_src.parameters():
+        p.requires_grad = False
+
+    criterion = nn.NLLLoss()
+    optimizer_tgt = optim.Adam(model_tgt.parameters(),
+                               lr=params.c_learning_rate,
+                               betas=(params.beta1, params.beta2))
+    optimizer_critic = optim.Adam(model_tgt.parameters(),
+                                  lr=params.d_learning_rate,
+                                  betas=(params.beta1, params.beta2))
+    len_data_loader = min(len(src_data_loader), len(tgt_data_loader))
+
+    for epoch in range(params.num_epochs):
+        data_zip = enumerate(zip(src_data_loader, tgt_data_loader))
+        for step, ((images_src, _), (images_tgt, _)) in data_zip:
+            # train discriminator
+            images_src = make_variable(images_src)
+            images_tgt = make_variable(images_tgt)
+            optimizer_tgt.zero_grad()
+            optimizer_critic.zero_grad()
+
+            feat_src, _ = model_src(images_src)
+            feat_tgt, _ = model_tgt(images_tgt)
+
+            labels_src = make_variable(
+                torch.LongTensor(feat_src.size()[0]).fill_(1))
+            labels_tgt = make_variable(
+                torch.LongTensor(feat_tgt.size()[0]).fill_(0))
+
+            pred_src = model_critic(feat_src)
+            loss_src = criterion(pred_src, labels_src)
+            loss_src.backward()
+
+            pred_tgt = model_critic(feat_tgt)
+            loss_tgt = criterion(pred_tgt, labels_tgt)
+            loss_tgt.backward()
+
+            loss_critic = loss_src + loss_tgt
+
+            optimizer_critic.step()
+
+            # train target encoder
+            optimizer_tgt.zero_grad()
+            optimizer_critic.zero_grad()
+
+            feat_tgt, _ = model_tgt(images_tgt)
+            labels_src = make_variable(
+                torch.LongTensor(feat_tgt.size()[0]).fill_(1))
+
+            pred_tgt = model_critic(feat_tgt)
+            loss_gen = criterion(pred_tgt, labels_src)
+            loss_gen.backward()
+
+            optimizer_tgt.step()
+
+            # print step info
+            if ((step + 1) % params.log_step == 0):
+                print("Epoch [{}/{}] Step [{}/{}]:"
+                      "d_loss={} g_loss={} D(src)={} D(tgt)={}"
+                      .format(epoch + 1,
+                              params.num_epochs,
+                              step + 1,
+                              len_data_loader,
+                              loss_critic.data[0],
+                              loss_gen.data[0],
+                              loss_src.data[0],
+                              loss_tgt.data[0]))
+
+        # save model parameters
+        if ((epoch + 1) % params.save_step == 0):
+            if not os.path.exists(params.model_root):
+                os.makedirs(params.model_root)
+            torch.save(model_critic.state_dict(), os.path.join(
+                params.model_root,
+                "ADDA-critic-{}.pt".format(epoch + 1)))
+            torch.save(model_tgt.state_dict(), os.path.join(
+                params.model_root,
+                "ADDA-target-{}.pt".format(epoch + 1)))

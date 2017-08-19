@@ -33,8 +33,8 @@ d_model_restore = None
 # params for training network
 num_gpu = 1
 num_epochs_pre = 100
-num_epochs = 100
-log_step = 100
+num_epochs = 500
+log_step = 20
 save_step = 100
 manual_seed = None
 
