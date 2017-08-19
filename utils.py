@@ -55,12 +55,12 @@ def init_random_seed(manual_seed):
         torch.cuda.manual_seed_all(seed)
 
 
-def get_data_loader(name):
+def get_data_loader(name, train=True):
     """Get data loader by name."""
     if name == "MNIST":
-        return get_mnist()
+        return get_mnist(train)
     elif name == "USPS":
-        return get_usps()
+        return get_usps(train)
 
 
 def init_model(net, restore):
@@ -71,6 +71,8 @@ def init_model(net, restore):
     # restore model weights
     if restore is not None and os.path.exists(restore):
         net.load_state_dict(torch.load(restore))
+        net.restored = True
+        print("Restore model from: {}".format(os.path.abspath(restore)))
 
     # check if cuda is available
     if torch.cuda.is_available():
@@ -86,3 +88,5 @@ def save_model(net, filename):
         os.makedirs(params.model_root)
     torch.save(net.state_dict(),
                os.path.join(params.model_root, filename))
+    print("save pretrained model to: {}".format(os.path.join(params.model_root,
+                                                             filename)))

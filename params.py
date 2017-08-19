@@ -12,7 +12,7 @@ num_classes = 10
 
 # params for source dataset
 src_dataset = "MNIST"
-src_model_restore = None
+src_model_restore = "snapshots/classifier_src-100.pt"
 
 # params for target dataset
 tgt_dataset = "USPS"

@@ -10,25 +10,25 @@ import params
 from utils import make_variable, save_model
 
 
-def train_src(net, data_loader):
+def train_src(model, data_loader):
     """Train classifier for source domain."""
-    print("Classifier for source domain:")
-    print(net)
+    print("=== Training classifier for source domain ===")
+    print(model)
 
-    optimizer = optim.Adam(net.parameters(),
+    optimizer = optim.Adam(model.parameters(),
                            lr=params.c_learning_rate,
                            betas=(params.beta1, params.beta2))
     criterion = nn.NLLLoss()
 
     for epoch in range(params.num_epochs_pre):
-        net.train()
+        model.train()
         for step, (images, labels) in enumerate(data_loader):
             images = make_variable(images)
             labels = make_variable(labels.squeeze_())
 
             optimizer.zero_grad()
 
-            _, preds = net(images)
+            _, preds = model(images)
             loss = criterion(preds, labels)
 
             loss.backward()
@@ -43,6 +43,34 @@ def train_src(net, data_loader):
                               loss.data[0]))
 
         if ((epoch + 1) % params.save_step == 0):
-            save_model(net, "classifier_src-{}.pt".format(epoch + 1))
+            save_model(model, "classifier_src-{}.pt".format(epoch + 1))
 
-    save_model(net, "classifier_src-final.pt")
+    save_model(model, "classifier_src-final.pt")
+
+    return model
+
+
+def eval_src(model, data_loader):
+    """Evaluate classifier for source domain."""
+    print("=== Evaluating classifier for source domain ===")
+    print(model)
+
+    model.eval()
+    loss = 0
+    acc = 0
+    criterion = nn.NLLLoss()
+
+    for (images, labels) in data_loader:
+        images = make_variable(images, volatile=True)
+        labels = make_variable(labels)
+
+        _, preds = model(images)
+        loss += criterion(preds, labels).data[0]
+
+        pred_cls = preds.data.max(1)[1]
+        acc += pred_cls.eq(labels.data).cpu().sum()
+
+    loss /= len(data_loader)
+    acc /= len(data_loader.dataset)
+
+    print("Avg Loss = {}, Avg Accuracy = {:2%}".format(loss, acc))

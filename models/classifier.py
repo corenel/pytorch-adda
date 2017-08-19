@@ -15,6 +15,7 @@ class Classifier(nn.Module):
         self.conv_dims = conv_dims
         self.num_classes = num_classes
         self.fc_dims = fc_dims
+        self.restored = False
 
         self.encoder = nn.Sequential(
             # 1st conv layer
