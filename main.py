@@ -32,9 +32,9 @@ if __name__ == '__main__':
                               restore=params.d_model_restore)
 
     # train and eval source model
-    # if not (model_src.restored and params.src_model_trained):
-    #     model_src = train_src(model_src, src_data_loader)
-    # eval_src(model_src, src_data_loader_eval)
+    if not (model_src.restored and params.src_model_trained):
+        model_src = train_src(model_src, src_data_loader)
+    eval_src(model_src, src_data_loader_eval)
 
     # train target encoder by GAN
     # if not (model_tgt.restored and params.tgt_model_trained):
@@ -42,4 +42,4 @@ if __name__ == '__main__':
                           src_data_loader, tgt_data_loader)
 
     # eval target encoder on test set of target dataset
-    # eval_tgt(model_src, model_tgt, tgt_data_loader_eval)
+    eval_tgt(model_src, model_tgt, tgt_data_loader_eval)

@@ -44,50 +44,45 @@ def train_tgt(model_src, model_tgt, model_critic,
 
             feat_src, _ = model_src(images_src)
             feat_tgt, _ = model_tgt(images_tgt)
+            feat_concat = torch.cat((feat_src, feat_tgt), 0)
 
-            labels_src = make_variable(
-                torch.LongTensor(feat_src.size()[0]).fill_(1))
-            labels_tgt = make_variable(
-                torch.LongTensor(feat_tgt.size()[0]).fill_(0))
+            label_concat = torch.cat((
+                make_variable(torch.ones(feat_concat.size(0) // 2).long()),
+                make_variable(torch.zeros(feat_concat.size(0) // 2).long())
+            ), 0)
 
-            pred_src = model_critic(feat_src)
-            loss_src = criterion(pred_src, labels_src)
-            loss_src.backward()
-
-            pred_tgt = model_critic(feat_tgt)
-            loss_tgt = criterion(pred_tgt, labels_tgt)
-            loss_tgt.backward()
-
-            loss_critic = loss_src + loss_tgt
+            pred_concat = model_critic(feat_concat)
+            loss_critic = criterion(pred_concat, label_concat)
+            loss_critic.backward(retain_graph=True)
 
             optimizer_critic.step()
+
+            pred_cls = torch.squeeze(pred_concat.max(1)[1])
+            acc = (pred_cls == label_concat).float().mean()
 
             # train target encoder
             optimizer_tgt.zero_grad()
             optimizer_critic.zero_grad()
 
-            feat_tgt, _ = model_tgt(images_tgt)
-            labels_src = make_variable(
-                torch.LongTensor(feat_tgt.size()[0]).fill_(1))
-
-            pred_tgt = model_critic(feat_tgt)
-            loss_gen = criterion(pred_tgt, labels_src)
-            loss_gen.backward()
+            loss_tgt = criterion(
+                feat_concat[feat_concat.size(0) // 2:, ...],
+                make_variable(torch.ones(feat_concat.size(0) // 2).long())
+            )
+            loss_tgt.backward()
 
             optimizer_tgt.step()
 
             # print step info
             if ((step + 1) % params.log_step == 0):
                 print("Epoch [{}/{}] Step [{}/{}]:"
-                      "d_loss={} g_loss={} D(src)={} D(tgt)={}"
+                      "d_loss={:.3f} g_loss={:.3f} acc={:.3f}"
                       .format(epoch + 1,
                               params.num_epochs,
                               step + 1,
                               len_data_loader,
                               loss_critic.data[0],
-                              loss_gen.data[0],
-                              loss_src.data[0],
-                              loss_tgt.data[0]))
+                              loss_tgt.data[0],
+                              acc.data[0]))
 
         # save model parameters
         if ((epoch + 1) % params.save_step == 0):
