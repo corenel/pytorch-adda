@@ -2,7 +2,7 @@
 
 import params
 from core import eval_src, eval_tgt, train_src, train_tgt
-from models import Classifier, Discriminator
+from models import Discriminator, LeNet
 from utils import get_data_loader, init_model, init_random_seed
 
 if __name__ == '__main__':
@@ -16,16 +16,8 @@ if __name__ == '__main__':
     tgt_data_loader_eval = get_data_loader(params.tgt_dataset, train=False)
 
     # load models
-    model_src = init_model(net=Classifier(num_channels=params.num_channels,
-                                          conv_dims=params.c_conv_dims,
-                                          num_classes=params.num_classes,
-                                          fc_dims=params.c_fc_dims),
-                           restore=params.src_model_restore)
-    model_tgt = init_model(net=Classifier(num_channels=params.num_channels,
-                                          conv_dims=params.c_conv_dims,
-                                          num_classes=params.num_classes,
-                                          fc_dims=params.c_fc_dims),
-                           restore=params.tgt_model_restore)
+    model_src = init_model(net=LeNet(), restore=params.src_model_restore)
+    model_tgt = init_model(net=LeNet(), restore=params.tgt_model_restore)
     model_critic = init_model(Discriminator(input_dims=params.d_input_dims,
                                             hidden_dims=params.d_hidden_dims,
                                             output_dims=params.d_output_dims),
@@ -38,8 +30,8 @@ if __name__ == '__main__':
 
     # train target encoder by GAN
     # if not (model_tgt.restored and params.tgt_model_trained):
-    model_tgt = train_tgt(model_src, model_tgt, model_critic,
-                          src_data_loader, tgt_data_loader)
+    # model_tgt = train_tgt(model_src, model_tgt, model_critic,
+    #                       src_data_loader, tgt_data_loader)
 
     # eval target encoder on test set of target dataset
-    eval_tgt(model_src, model_tgt, tgt_data_loader_eval)
+    # eval_tgt(model_src, model_tgt, tgt_data_loader_eval)

@@ -13,10 +13,16 @@ from utils import make_variable
 def train_tgt(model_src, model_tgt, model_critic,
               src_data_loader, tgt_data_loader):
     """Train encoder for target domain."""
+    ####################
+    # 1. setup network #
+    ####################
+
+    # welcome message
     print("=== Training encoder for target domain ===")
+    # set train state for Dropout and BN layers
     model_tgt.train()
     model_critic.train()
-
+    # print model architecture
     print(model_tgt)
     print(model_critic)
 
@@ -24,6 +30,7 @@ def train_tgt(model_src, model_tgt, model_critic,
     for p in model_src.parameters():
         p.requires_grad = False
 
+    # setup criterion and optimizer
     criterion = nn.NLLLoss()
     optimizer_tgt = optim.Adam(model_tgt.parameters(),
                                lr=params.c_learning_rate,
@@ -33,12 +40,21 @@ def train_tgt(model_src, model_tgt, model_critic,
                                   betas=(params.beta1, params.beta2))
     len_data_loader = min(len(src_data_loader), len(tgt_data_loader))
 
+    ####################
+    # 2. train network #
+    ####################
+
     for epoch in range(params.num_epochs):
+        # zip source and target data pair
         data_zip = enumerate(zip(src_data_loader, tgt_data_loader))
         for step, ((images_src, _), (images_tgt, _)) in data_zip:
-            # train discriminator
+            ###########################
+            # 2.1 train discriminator #
+            ###########################
+
             images_src = make_variable(images_src)
             images_tgt = make_variable(images_tgt)
+
             optimizer_tgt.zero_grad()
             optimizer_critic.zero_grad()
 
@@ -47,8 +63,8 @@ def train_tgt(model_src, model_tgt, model_critic,
             feat_concat = torch.cat((feat_src, feat_tgt), 0)
 
             label_concat = torch.cat((
-                make_variable(torch.ones(feat_concat.size(0) // 2).long()),
-                make_variable(torch.zeros(feat_concat.size(0) // 2).long())
+                make_variable(torch.zeros(feat_concat.size(0) // 2).long()),
+                make_variable(torch.ones(feat_concat.size(0) // 2).long())
             ), 0)
 
             pred_concat = model_critic(feat_concat)

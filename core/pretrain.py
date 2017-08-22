@@ -19,7 +19,7 @@ def train_src(model, data_loader):
     optimizer = optim.Adam(model.parameters(),
                            lr=params.c_learning_rate,
                            betas=(params.beta1, params.beta2))
-    criterion = nn.NLLLoss()
+    criterion = nn.CrossEntropyLoss()
 
     for epoch in range(params.num_epochs_pre):
         for step, (images, labels) in enumerate(data_loader):
@@ -42,6 +42,9 @@ def train_src(model, data_loader):
                               len(data_loader),
                               loss.data[0]))
 
+        if ((epoch + 1) % params.eval_step == 0):
+            eval_src(model, data_loader, welcome_msg=False)
+
         if ((epoch + 1) % params.save_step == 0):
             save_model(model, "classifier_src-{}.pt".format(epoch + 1))
 
@@ -50,15 +53,16 @@ def train_src(model, data_loader):
     return model
 
 
-def eval_src(model, data_loader):
+def eval_src(model, data_loader, welcome_msg=True):
     """Evaluate classifier for source domain."""
-    print("=== Evaluating classifier for source domain ===")
-    print(model)
+    if welcome_msg:
+        print("=== Evaluating classifier for source domain ===")
+        print(model)
 
     model.eval()
     loss = 0
     acc = 0
-    criterion = nn.NLLLoss()
+    criterion = nn.CrossEntropyLoss()
 
     for (images, labels) in data_loader:
         images = make_variable(images, volatile=True)
