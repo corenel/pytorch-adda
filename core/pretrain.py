@@ -7,7 +7,7 @@ import params
 from utils import make_variable, save_model
 
 
-def train_src(model, data_loader):
+def train_src(encoder, classifier, data_loader):
     """Train classifier for source domain."""
     ####################
     # 1. setup network #
@@ -15,15 +15,18 @@ def train_src(model, data_loader):
 
     # print welcome message and model architecture
     print("=== Training classifier for source domain ===")
-    print(model)
+    print(encoder)
+    print(classifier)
 
     # set train state for Dropout and BN layers
-    model.train()
+    encoder.train()
+    classifier.train()
 
     # setup criterion and optimizer
-    optimizer = optim.Adam(model.parameters(),
-                           lr=params.c_learning_rate,
-                           betas=(params.beta1, params.beta2))
+    optimizer = optim.Adam(
+        list(encoder.parameters()) + list(classifier.parameters()),
+        lr=params.c_learning_rate,
+        betas=(params.beta1, params.beta2))
     criterion = nn.CrossEntropyLoss()
 
     ####################
@@ -40,7 +43,7 @@ def train_src(model, data_loader):
             optimizer.zero_grad()
 
             # compute loss for critic
-            _, preds = model(images)
+            preds = classifier(encoder(images))
             loss = criterion(preds, labels)
 
             # optimize source classifier
@@ -58,27 +61,32 @@ def train_src(model, data_loader):
 
         # eval model on test set
         if ((epoch + 1) % params.eval_step_pre == 0):
-            eval_src(model, data_loader, welcome_msg=False)
+            eval_src(encoder, classifier, data_loader, welcome_msg=False)
 
         # save model parameters
         if ((epoch + 1) % params.save_step_pre == 0):
-            save_model(model, "classifier_src-{}.pt".format(epoch + 1))
+            save_model(encoder, "ADDA-source-encoder-{}.pt".format(epoch + 1))
+            save_model(
+                classifier, "ADDA-source-classifier-{}.pt".format(epoch + 1))
 
     # # save final model
-    save_model(model, "classifier_src-final.pt")
+    save_model(encoder, "ADDA-source-encoder-final.pt")
+    save_model(classifier, "ADDA-source-classifier-final.pt")
 
-    return model
+    return encoder, classifier
 
 
-def eval_src(model, data_loader, welcome_msg=True):
+def eval_src(encoder, classifier, data_loader, welcome_msg=True):
     """Evaluate classifier for source domain."""
     # print welcome message and model architecture
     if welcome_msg:
         print("=== Evaluating classifier for source domain ===")
-        print(model)
+        print(encoder)
+        print(classifier)
 
     # set eval state for Dropout and BN layers
-    model.eval()
+    encoder.eval()
+    classifier.eval()
 
     # init loss and accuracy
     loss = 0
@@ -92,7 +100,7 @@ def eval_src(model, data_loader, welcome_msg=True):
         images = make_variable(images, volatile=True)
         labels = make_variable(labels)
 
-        _, preds = model(images)
+        preds = classifier(encoder(images))
         loss += criterion(preds, labels).data[0]
 
         pred_cls = preds.data.max(1)[1]

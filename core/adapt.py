@@ -10,7 +10,7 @@ import params
 from utils import make_variable
 
 
-def train_tgt(model_src, model_tgt, model_critic,
+def train_tgt(src_encoder, tgt_encoder, critic,
               src_data_loader, tgt_data_loader):
     """Train encoder for target domain."""
     ####################
@@ -21,23 +21,19 @@ def train_tgt(model_src, model_tgt, model_critic,
     print("=== Training encoder for target domain ===")
 
     # print model architecture
-    print(model_tgt)
-    print(model_critic)
+    print(tgt_encoder)
+    print(critic)
 
     # set train state for Dropout and BN layers
-    model_tgt.train()
-    model_critic.train()
-
-    # no need to compute gradients for source model
-    for p in model_src.parameters():
-        p.requires_grad = False
+    tgt_encoder.train()
+    critic.train()
 
     # setup criterion and optimizer
     criterion = nn.CrossEntropyLoss()
-    optimizer_tgt = optim.Adam(model_tgt.parameters(),
+    optimizer_tgt = optim.Adam(tgt_encoder.parameters(),
                                lr=params.c_learning_rate,
                                betas=(params.beta1, params.beta2))
-    optimizer_critic = optim.Adam(model_tgt.parameters(),
+    optimizer_critic = optim.Adam(critic.parameters(),
                                   lr=params.d_learning_rate,
                                   betas=(params.beta1, params.beta2))
     len_data_loader = min(len(src_data_loader), len(tgt_data_loader))
@@ -59,13 +55,15 @@ def train_tgt(model_src, model_tgt, model_critic,
             images_tgt = make_variable(images_tgt)
 
             # zero gradients for optimizer
-            optimizer_tgt.zero_grad()
             optimizer_critic.zero_grad()
 
             # extract and concat features
-            feat_src, _ = model_src(images_src)
-            feat_tgt, _ = model_tgt(images_tgt)
+            feat_src = src_encoder(images_src)
+            feat_tgt = tgt_encoder(images_tgt)
             feat_concat = torch.cat((feat_src, feat_tgt), 0)
+
+            # predict on discriminator
+            pred_concat = critic(feat_concat.detach())
 
             # prepare real and fake label
             label_src = make_variable(torch.ones(feat_src.size(0)).long())
@@ -73,7 +71,6 @@ def train_tgt(model_src, model_tgt, model_critic,
             label_concat = torch.cat((label_src, label_tgt), 0)
 
             # compute loss for critic
-            pred_concat = model_critic(feat_concat)
             loss_critic = criterion(pred_concat, label_concat)
             loss_critic.backward()
 
@@ -88,17 +85,19 @@ def train_tgt(model_src, model_tgt, model_critic,
             ############################
 
             # zero gradients for optimizer
-            optimizer_tgt.zero_grad()
             optimizer_critic.zero_grad()
+            optimizer_tgt.zero_grad()
 
             # extract and target features
-            feat_tgt, _ = model_tgt(images_tgt)
+            feat_tgt = tgt_encoder(images_tgt)
+
+            # predict on discriminator
+            pred_tgt = critic(feat_tgt)
 
             # prepare fake labels
             label_tgt = make_variable(torch.ones(feat_tgt.size(0)).long())
 
             # compute loss for target encoder
-            pred_tgt = model_critic(feat_tgt)
             loss_tgt = criterion(pred_tgt, label_tgt)
             loss_tgt.backward()
 
@@ -125,9 +124,9 @@ def train_tgt(model_src, model_tgt, model_critic,
         if ((epoch + 1) % params.save_step == 0):
             if not os.path.exists(params.model_root):
                 os.makedirs(params.model_root)
-            torch.save(model_critic.state_dict(), os.path.join(
+            torch.save(critic.state_dict(), os.path.join(
                 params.model_root,
                 "ADDA-critic-{}.pt".format(epoch + 1)))
-            torch.save(model_tgt.state_dict(), os.path.join(
+            torch.save(tgt_encoder.state_dict(), os.path.join(
                 params.model_root,
-                "ADDA-target-{}.pt".format(epoch + 1)))
+                "ADDA-target-encoder-{}.pt".format(epoch + 1)))

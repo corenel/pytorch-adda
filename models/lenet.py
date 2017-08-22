@@ -4,12 +4,12 @@ import torch.nn.functional as F
 from torch import nn
 
 
-class LeNet(nn.Module):
-    """LeNet model for source domain."""
+class LeNetEncoder(nn.Module):
+    """LeNet encoder model for ADDA."""
 
     def __init__(self):
-        """Init LeNet."""
-        super(LeNet, self).__init__()
+        """Init LeNet encoder."""
+        super(LeNetEncoder, self).__init__()
 
         self.restored = False
 
@@ -24,16 +24,29 @@ class LeNet(nn.Module):
             # input [20 x 12 x 12]
             # output [50 x 4 x 4]
             nn.Conv2d(20, 50, kernel_size=5),
+            nn.Dropout2d(),
             nn.MaxPool2d(kernel_size=2),
             nn.ReLU()
         )
         self.fc1 = nn.Linear(50 * 4 * 4, 500)
-        self.fc2 = nn.Linear(500, 10)
 
     def forward(self, input):
         """Forward the LeNet."""
         conv_out = self.encoder(input)
-        feature = self.fc1(conv_out.view(-1, 50 * 4 * 4))
-        out = F.dropout(F.relu(feature), training=self.training)
+        feat = self.fc1(conv_out.view(-1, 50 * 4 * 4))
+        return feat
+
+
+class LeNetClassifier(nn.Module):
+    """LeNet classifier model for ADDA."""
+
+    def __init__(self):
+        """Init LeNet encoder."""
+        super(LeNetClassifier, self).__init__()
+        self.fc2 = nn.Linear(500, 10)
+
+    def forward(self, feat):
+        """Forward the LeNet classifier."""
+        out = F.dropout(F.relu(feat), training=self.training)
         out = self.fc2(out)
-        return feature, out
+        return out

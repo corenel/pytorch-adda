@@ -1,4 +1,4 @@
 from .discriminator import Discriminator
-from .lenet import LeNet
+from .lenet import LeNetClassifier, LeNetEncoder
 
-__all__ = (LeNet, Discriminator)
+__all__ = (LeNetClassifier, LeNetEncoder, Discriminator)

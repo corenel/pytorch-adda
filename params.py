@@ -11,12 +11,13 @@ image_size = 64
 
 # params for source dataset
 src_dataset = "MNIST"
-src_model_restore = "snapshots/classifier_src-final.pt"
-src_model_trained = True
+src_encoder_restore = None
+src_classifier_restore = None
+src_model_trained = False
 
 # params for target dataset
 tgt_dataset = "USPS"
-tgt_model_restore = None
+tgt_encoder_restore = None
 tgt_model_trained = False
 
 # params for setting up models
