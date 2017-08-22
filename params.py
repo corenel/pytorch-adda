@@ -1,4 +1,4 @@
-"""Params for WGAN-GP."""
+"""Params for ADDA."""
 
 # params for dataset and data loader
 data_root = "data"
