@@ -13,11 +13,6 @@ def train_src(encoder, classifier, data_loader):
     # 1. setup network #
     ####################
 
-    # print welcome message and model architecture
-    print("=== Training classifier for source domain ===")
-    print(encoder)
-    print(classifier)
-
     # set train state for Dropout and BN layers
     encoder.train()
     classifier.train()
@@ -61,7 +56,7 @@ def train_src(encoder, classifier, data_loader):
 
         # eval model on test set
         if ((epoch + 1) % params.eval_step_pre == 0):
-            eval_src(encoder, classifier, data_loader, welcome_msg=False)
+            eval_src(encoder, classifier, data_loader)
 
         # save model parameters
         if ((epoch + 1) % params.save_step_pre == 0):
@@ -76,14 +71,8 @@ def train_src(encoder, classifier, data_loader):
     return encoder, classifier
 
 
-def eval_src(encoder, classifier, data_loader, welcome_msg=True):
+def eval_src(encoder, classifier, data_loader):
     """Evaluate classifier for source domain."""
-    # print welcome message and model architecture
-    if welcome_msg:
-        print("=== Evaluating classifier for source domain ===")
-        print(encoder)
-        print(classifier)
-
     # set eval state for Dropout and BN layers
     encoder.eval()
     classifier.eval()

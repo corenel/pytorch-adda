@@ -6,20 +6,25 @@ import torch.nn as nn
 from utils import make_variable
 
 
-def eval_tgt(model_src, model_tgt, data_loader):
+def eval_tgt(encoder, classifier, data_loader):
     """Evaluation for target encoder by source classifier on target dataset."""
-    print("=== Evaluating classifier for encoded target domain ===")
-    model_src.eval()
-    model_tgt.eval()
+    # set eval state for Dropout and BN layers
+    encoder.eval()
+    classifier.eval()
+
+    # init loss and accuracy
     loss = 0
     acc = 0
+
+    # set loss function
     criterion = nn.CrossEntropyLoss()
 
+    # evaluate network
     for (images, labels) in data_loader:
         images = make_variable(images, volatile=True)
         labels = make_variable(labels).squeeze_()
 
-        _, preds = model_tgt(images)
+        preds = classifier(encoder(images))
         loss += criterion(preds, labels).data[0]
 
         pred_cls = preds.data.max(1)[1]

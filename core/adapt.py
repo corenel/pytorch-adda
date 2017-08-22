@@ -17,13 +17,6 @@ def train_tgt(src_encoder, tgt_encoder, critic,
     # 1. setup network #
     ####################
 
-    # welcome message
-    print("=== Training encoder for target domain ===")
-
-    # print model architecture
-    print(tgt_encoder)
-    print(critic)
-
     # set train state for Dropout and BN layers
     tgt_encoder.train()
     critic.train()
@@ -122,11 +115,17 @@ def train_tgt(src_encoder, tgt_encoder, critic,
         # 2.4 save model parameters #
         #############################
         if ((epoch + 1) % params.save_step == 0):
-            if not os.path.exists(params.model_root):
-                os.makedirs(params.model_root)
             torch.save(critic.state_dict(), os.path.join(
                 params.model_root,
                 "ADDA-critic-{}.pt".format(epoch + 1)))
             torch.save(tgt_encoder.state_dict(), os.path.join(
                 params.model_root,
                 "ADDA-target-encoder-{}.pt".format(epoch + 1)))
+
+    torch.save(critic.state_dict(), os.path.join(
+        params.model_root,
+        "ADDA-critic-final.pt"))
+    torch.save(tgt_encoder.state_dict(), os.path.join(
+        params.model_root,
+        "ADDA-target-encoder-final.pt"))
+    return tgt_encoder

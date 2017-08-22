@@ -18,7 +18,7 @@ if __name__ == '__main__':
     # load models
     src_encoder = init_model(net=LeNetEncoder(),
                              restore=params.src_encoder_restore)
-    classifier_src = init_model(net=LeNetClassifier(),
+    src_classifier = init_model(net=LeNetClassifier(),
                                 restore=params.src_classifier_restore)
     tgt_encoder = init_model(net=LeNetEncoder(),
                              restore=params.tgt_encoder_restore)
@@ -27,16 +27,37 @@ if __name__ == '__main__':
                                       output_dims=params.d_output_dims),
                         restore=params.d_model_restore)
 
-    # train and eval source model
-    if not (src_encoder.restored and classifier_src.restored and
+    # train source model
+    print("=== Training classifier for source domain ===")
+    print(">>> Source Encoder <<<")
+    print(src_encoder)
+    print(">>> Source Classifier <<<")
+    print(src_classifier)
+
+    if not (src_encoder.restored and src_classifier.restored and
             params.src_model_trained):
-        model_src = train_src(src_encoder, classifier_src, src_data_loader)
-    eval_src(src_encoder, classifier_src, src_data_loader_eval)
+        src_encoder, src_classifier = train_src(
+            src_encoder, src_classifier, src_data_loader)
+
+    # eval source model
+    print("=== Evaluating classifier for source domain ===")
+    eval_src(src_encoder, src_classifier, src_data_loader_eval)
 
     # train target encoder by GAN
-    # if not (tgt_encoder.restored and params.tgt_encoder_trained):
-    #     model_tgt = train_tgt(src_encoder, tgt_encoder, critic,
-    #                           src_data_loader, tgt_data_loader)
+    print("=== Training encoder for target domain ===")
+    print(">>> Target Encoder <<<")
+    print(tgt_encoder)
+    print(">>> Critic <<<")
+    print(critic)
+
+    if not (tgt_encoder.restored and critic.restored and
+            params.tgt_model_trained):
+        tgt_encoder = train_tgt(src_encoder, tgt_encoder, critic,
+                                src_data_loader, tgt_data_loader)
 
     # eval target encoder on test set of target dataset
-    # eval_tgt(classifier_src, tgt_encoder, tgt_data_loader_eval)
+    print("=== Evaluating classifier for encoded target domain ===")
+    print(">>> source only <<<")
+    eval_tgt(src_encoder, src_classifier, tgt_data_loader_eval)
+    print(">>> domain adaption <<<")
+    eval_tgt(tgt_encoder, src_classifier, tgt_data_loader_eval)

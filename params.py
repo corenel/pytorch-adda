@@ -11,21 +11,21 @@ image_size = 64
 
 # params for source dataset
 src_dataset = "MNIST"
-src_encoder_restore = None
-src_classifier_restore = None
-src_model_trained = False
+src_encoder_restore = "snapshots/ADDA-source-encoder-final.pt"
+src_classifier_restore = "snapshots/ADDA-source-classifier-final.pt"
+src_model_trained = True
 
 # params for target dataset
 tgt_dataset = "USPS"
-tgt_encoder_restore = None
-tgt_model_trained = False
+tgt_encoder_restore = "snapshots/ADDA-target-encoder-500.pt"
+tgt_model_trained = True
 
 # params for setting up models
 model_root = "snapshots"
 d_input_dims = 500
 d_hidden_dims = 500
 d_output_dims = 2
-d_model_restore = None
+d_model_restore = "snapshots/ADDA-critic-500.pt"
 
 # params for training network
 num_gpu = 1
@@ -33,9 +33,9 @@ num_epochs_pre = 100
 log_step_pre = 20
 eval_step_pre = 20
 save_step_pre = 100
-num_epochs = 20000
-log_step = 20
-save_step = 1000
+num_epochs = 2000
+log_step = 100
+save_step = 100
 manual_seed = None
 
 # params for optimizing models
