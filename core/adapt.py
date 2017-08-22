@@ -19,19 +19,21 @@ def train_tgt(model_src, model_tgt, model_critic,
 
     # welcome message
     print("=== Training encoder for target domain ===")
-    # set train state for Dropout and BN layers
-    model_tgt.train()
-    model_critic.train()
+
     # print model architecture
     print(model_tgt)
     print(model_critic)
+
+    # set train state for Dropout and BN layers
+    model_tgt.train()
+    model_critic.train()
 
     # no need to compute gradients for source model
     for p in model_src.parameters():
         p.requires_grad = False
 
     # setup criterion and optimizer
-    criterion = nn.NLLLoss()
+    criterion = nn.CrossEntropyLoss()
     optimizer_tgt = optim.Adam(model_tgt.parameters(),
                                lr=params.c_learning_rate,
                                betas=(params.beta1, params.beta2))
@@ -52,46 +54,63 @@ def train_tgt(model_src, model_tgt, model_critic,
             # 2.1 train discriminator #
             ###########################
 
+            # make images variable
             images_src = make_variable(images_src)
             images_tgt = make_variable(images_tgt)
 
+            # zero gradients for optimizer
             optimizer_tgt.zero_grad()
             optimizer_critic.zero_grad()
 
+            # extract and concat features
             feat_src, _ = model_src(images_src)
             feat_tgt, _ = model_tgt(images_tgt)
             feat_concat = torch.cat((feat_src, feat_tgt), 0)
 
-            label_concat = torch.cat((
-                make_variable(torch.zeros(feat_concat.size(0) // 2).long()),
-                make_variable(torch.ones(feat_concat.size(0) // 2).long())
-            ), 0)
+            # prepare real and fake label
+            label_src = make_variable(torch.ones(feat_src.size(0)).long())
+            label_tgt = make_variable(torch.zeros(feat_tgt.size(0)).long())
+            label_concat = torch.cat((label_src, label_tgt), 0)
 
+            # compute loss for critic
             pred_concat = model_critic(feat_concat)
             loss_critic = criterion(pred_concat, label_concat)
-            loss_critic.backward(retain_graph=True)
+            loss_critic.backward()
 
+            # optimize critic
             optimizer_critic.step()
 
             pred_cls = torch.squeeze(pred_concat.max(1)[1])
             acc = (pred_cls == label_concat).float().mean()
 
-            # train target encoder
+            ############################
+            # 2.2 train target encoder #
+            ############################
+
+            # zero gradients for optimizer
             optimizer_tgt.zero_grad()
             optimizer_critic.zero_grad()
 
-            loss_tgt = criterion(
-                feat_concat[feat_concat.size(0) // 2:, ...],
-                make_variable(torch.ones(feat_concat.size(0) // 2).long())
-            )
+            # extract and target features
+            feat_tgt, _ = model_tgt(images_tgt)
+
+            # prepare fake labels
+            label_tgt = make_variable(torch.ones(feat_tgt.size(0)).long())
+
+            # compute loss for target encoder
+            pred_tgt = model_critic(feat_tgt)
+            loss_tgt = criterion(pred_tgt, label_tgt)
             loss_tgt.backward()
 
+            # optimize target encoder
             optimizer_tgt.step()
 
-            # print step info
+            #######################
+            # 2.3 print step info #
+            #######################
             if ((step + 1) % params.log_step == 0):
                 print("Epoch [{}/{}] Step [{}/{}]:"
-                      "d_loss={:.3f} g_loss={:.3f} acc={:.3f}"
+                      "d_loss={:.5f} g_loss={:.5f} acc={:.5f}"
                       .format(epoch + 1,
                               params.num_epochs,
                               step + 1,
@@ -100,7 +119,9 @@ def train_tgt(model_src, model_tgt, model_critic,
                               loss_tgt.data[0],
                               acc.data[0]))
 
-        # save model parameters
+        #############################
+        # 2.4 save model parameters #
+        #############################
         if ((epoch + 1) % params.save_step == 0):
             if not os.path.exists(params.model_root):
                 os.makedirs(params.model_root)

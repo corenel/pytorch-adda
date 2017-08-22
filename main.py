@@ -29,9 +29,9 @@ if __name__ == '__main__':
     eval_src(model_src, src_data_loader_eval)
 
     # train target encoder by GAN
-    # if not (model_tgt.restored and params.tgt_model_trained):
-    # model_tgt = train_tgt(model_src, model_tgt, model_critic,
-    #                       src_data_loader, tgt_data_loader)
+    if not (model_tgt.restored and params.tgt_model_trained):
+        model_tgt = train_tgt(model_src, model_tgt, model_critic,
+                              src_data_loader, tgt_data_loader)
 
     # eval target encoder on test set of target dataset
     # eval_tgt(model_src, model_tgt, tgt_data_loader_eval)

@@ -13,7 +13,7 @@ def eval_tgt(model_src, model_tgt, data_loader):
     model_tgt.eval()
     loss = 0
     acc = 0
-    criterion = nn.NLLLoss()
+    criterion = nn.CrossEntropyLoss()
 
     for (images, labels) in data_loader:
         images = make_variable(images, volatile=True)
