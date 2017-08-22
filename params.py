@@ -17,7 +17,7 @@ src_model_trained = True
 
 # params for target dataset
 tgt_dataset = "USPS"
-tgt_encoder_restore = "snapshots/ADDA-target-encoder-500.pt"
+tgt_encoder_restore = "snapshots/ADDA-target-encoder-final.pt"
 tgt_model_trained = True
 
 # params for setting up models
@@ -25,7 +25,7 @@ model_root = "snapshots"
 d_input_dims = 500
 d_hidden_dims = 500
 d_output_dims = 2
-d_model_restore = "snapshots/ADDA-critic-500.pt"
+d_model_restore = "snapshots/ADDA-critic-final.pt"
 
 # params for training network
 num_gpu = 1
