@@ -50,6 +50,10 @@ if __name__ == '__main__':
     print(">>> Critic <<<")
     print(critic)
 
+    # init weights of target encoder with those of source encoder
+    if not tgt_encoder.restored:
+        tgt_encoder.load_state_dict(src_encoder.state_dict())
+
     if not (tgt_encoder.restored and critic.restored and
             params.tgt_model_trained):
         tgt_encoder = train_tgt(src_encoder, tgt_encoder, critic,

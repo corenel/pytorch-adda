@@ -21,9 +21,6 @@ def train_tgt(src_encoder, tgt_encoder, critic,
     tgt_encoder.train()
     critic.train()
 
-    # init weights of target encoder
-    tgt_encoder.load_state_dict(src_encoder.state_dict())
-
     # setup criterion and optimizer
     criterion = nn.CrossEntropyLoss()
     optimizer_tgt = optim.Adam(tgt_encoder.parameters(),
