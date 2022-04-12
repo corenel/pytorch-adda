@@ -2,8 +2,8 @@
 A PyTorch implementation for [Adversarial Discriminative Domain Adaptation](https://arxiv.org/abs/1702.05464).
 
 ## Environment
-- Python 3.6
-- PyTorch 0.2.0
+- Python >= 3.6 (Tested on Python 3.8)
+- PyTorch >= 1.0.0 (Tested on PyTorch 1.11.0)
 
 ## Usage
 
